@@ -14,42 +14,41 @@
             text-align: center; margin: 0; padding: env(safe-area-inset-top) 20px env(safe-area-inset-bottom) 20px;
             display: flex; flex-direction: column; justify-content: space-between; height: 100vh; box-sizing: border-box; overflow: hidden;
         }
-        .header { margin-top: 15px; }
-        .header div { color: var(--gael); letter-spacing: 4px; font-size: 11px; font-weight: bold; }
         .header h1 { font-size: 26px; margin: 5px 0; letter-spacing: -1px; }
 
         .progress-container { background: #1a1a1a; height: 22px; border-radius: 11px; border: 1px solid #333; overflow: hidden; position: relative; margin: 10px 0; }
         .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--gael), var(--neon)); transition: 0.8s ease; }
         .progress-text { position: absolute; width: 100%; top: 4px; font-size: 10px; font-weight: 800; }
 
-        .display-area { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
         .money { color: var(--neon); font-size: 75px; font-weight: 900; line-height: 1; margin: 0; }
         
         .touch-area { 
-            width: 170px; height: 170px; background: radial-gradient(circle, #222 0%, #000 100%); 
-            border: 4px solid var(--neon); border-radius: 50%; margin: 25px auto;
+            width: 180px; height: 180px; background: radial-gradient(circle, #222 0%, #000 100%); 
+            border: 4px solid var(--neon); border-radius: 50%; margin: 20px auto;
             display: flex; align-items: center; justify-content: center; cursor: pointer;
             -webkit-tap-highlight-color: transparent;
+            box-shadow: 0 0 20px rgba(0, 251, 255, 0.15);
         }
         .touch-area:active { transform: scale(0.9); border-color: var(--gael); }
-        .touch-area span { font-size: 65px; }
+        .touch-area span { font-size: 110px; line-height: 1; } /* LOGO GRANDE */
 
         .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-        .btn { border: none; border-radius: 16px; font-weight: 800; font-size: 13px; text-transform: uppercase; cursor: pointer; height: 60px; -webkit-tap-highlight-color: transparent; display: flex; align-items: center; justify-content: center; }
+        .btn { border: none; border-radius: 16px; font-weight: 800; font-size: 13px; text-transform: uppercase; cursor: pointer; height: 60px; display: flex; align-items: center; justify-content: center; }
         .btn-detail { background: #1a1a1a; color: white; border: 1px solid #333; }
         .btn-gasto { background: #200; color: var(--red); border: 1px solid var(--red); }
         .btn-close { background: var(--gael); color: white; width: 100%; height: 65px; margin-bottom: 10px; }
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 1000; flex-direction: column; padding: 60px 25px; box-sizing: border-box; }
-        .history-list { flex-grow: 1; overflow-y: auto; }
-        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 18px; border-bottom: 1px solid #111; }
-        .trash-btn { background: none; border: none; font-size: 22px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 1000; flex-direction: column; padding: 40px 25px; box-sizing: border-box; overflow-y: auto; }
+        
+        .ticket { background: #111; border: 2px dashed #333; border-radius: 10px; padding: 25px; position: relative; }
+        .ticket-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 18px; }
+        .ticket-total { font-size: 28px; font-weight: 900; color: var(--gold); border-top: 2px solid #222; padding-top: 15px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div>URBINA STUDIOS</div>
+        <div style="color:var(--gael); font-size:10px; letter-spacing:3px">URBINA STUDIOS</div>
         <h1>MALANDROS BARBER</h1>
     </div>
 
@@ -60,130 +59,129 @@
 
     <div class="display-area">
         <div class="money" id="dinero">$0</div>
-        <div style="color: #888; font-size: 14px;">CORTES HOY: <span id="contador" style="color:white">0</span></div>
+        <div style="color: #888; font-size: 14px;">CORTES: <span id="contador" style="color:white">0</span></div>
         <div class="touch-area" onclick="sumarCorte()"><span>💈</span></div>
     </div>
 
     <div>
         <div class="controls">
             <button class="btn btn-detail" onclick="verDetalleHoy()">DETALLE / BORRAR</button>
-            <button class="btn btn-gasto" onclick="agregarGasto()">GASTO (-)</button>
+            <button class="btn btn-gasto" onclick="agregarGasto()">GASTO</button>
         </div>
-        <button class="btn btn-close" onclick="finalizarDia()">CERRAR DÍA</button>
+        <button class="btn btn-close" onclick="confirmarCierre()">CERRAR DÍA</button>
+    </div>
+
+    <div id="resumenModal" class="modal">
+        <h2 style="color: var(--neon)">RESUMEN DEL DÍA</h2>
+        <div id="ticketArea"></div>
+        <button class="btn" style="width:100%; background: #25D366; color: black; margin-top: 20px;" onclick="compartirWhatsApp()">📲 COMPARTIR REPORTE</button>
+        <button class="btn btn-close" style="width:100%; margin-top: 10px;" onclick="finalizarDiaDefinitivo()">GUARDAR Y REINICIAR</button>
+        <button class="btn btn-detail" style="width:100%; margin-top: 10px; background:none;" onclick="cerrarModales()">REGRESAR</button>
     </div>
 
     <div id="historyModal" class="modal">
         <h2 style="color: var(--neon)">MOVIMIENTOS</h2>
-        <div class="history-list" id="dayHistoryList"></div>
+        <div id="dayHistoryList" style="flex-grow:1; overflow-y:auto"></div>
         <button class="btn" style="width:100%; background: var(--gold); color: black; margin-bottom: 10px;" onclick="verGlobal()">VER DÍAS PASADOS</button>
         <button class="btn btn-detail" style="width:100%" onclick="cerrarModales()">REGRESAR</button>
     </div>
 
     <div id="globalModal" class="modal">
         <h2 style="color: var(--gold)">HISTORIAL</h2>
-        <div class="history-list" id="globalHistoryList"></div>
+        <div id="globalHistoryList" style="flex-grow:1; overflow-y:auto"></div>
         <button class="btn btn-detail" style="width:100%; margin-top: 10px;" onclick="cerrarModales()">REGRESAR</button>
-        <button onclick="hardReset()" style="background:none; border:none; color:#300; margin-top:30px; font-size:10px">REINICIAR SISTEMA</button>
+        <button onclick="hardReset()" style="background:none; border:none; color:#300; margin-top:30px; font-size:10px">BORRAR TODO</button>
     </div>
 
     <script>
         const CLAVE = "URBINA2025";
-        // Sonido de caja registradora
-        const cashSound = new Audio('https://www.myinstants.com/media/sounds/cash-register-purchase.mp3');
-        
         let movimientos = JSON.parse(localStorage.getItem('movimientos_hoy')) || [];
         let registroGlobal = JSON.parse(localStorage.getItem('registro_global_malandros')) || [];
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (ctx.state === 'suspended') ctx.resume();
+            const osc = ctx.createOscillator(); const gain = ctx.createGain();
+            if (type === 'ganar') { osc.type = "sine"; osc.frequency.setValueAtTime(880, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+            } else { osc.type = "triangle"; osc.frequency.setValueAtTime(220, ctx.currentTime); osc.frequency.linearRampToValueAtTime(60, ctx.currentTime + 0.2); }
+            gain.gain.setValueAtTime(0.1, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+            osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.3);
+        }
 
         function actualizar() {
-            const ingresos = movimientos.filter(m => m.tipo === 'ingreso').reduce((a, b) => a + b.monto, 0);
-            const gastos = movimientos.filter(m => m.tipo === 'gasto').reduce((a, b) => a + b.monto, 0);
-            const neto = ingresos - gastos;
+            const ing = movimientos.filter(m => m.tipo === 'ingreso').reduce((a, b) => a + b.monto, 0);
+            const gas = movimientos.filter(m => m.tipo === 'gasto').reduce((a, b) => a + b.monto, 0);
+            const neto = ing - gas;
             const cortes = movimientos.filter(m => m.tipo === 'ingreso').length;
             const record = registroGlobal.length === 0 ? 5 : Math.max(...registroGlobal.map(r => r.cortes), 5);
-            
             document.getElementById('contador').innerText = cortes;
             document.getElementById('dinero').innerText = "$" + neto;
-            const pct = Math.min((cortes / record) * 100, 100);
-            document.getElementById('barra').style.width = pct + "%";
+            document.getElementById('barra').style.width = Math.min((cortes / record) * 100, 100) + "%";
             document.getElementById('textoBarra').innerText = cortes >= record ? "NUEVO RÉCORD" : `META: ${record}`;
             localStorage.setItem('movimientos_hoy', JSON.stringify(movimientos));
         }
 
         function sumarCorte() {
             let p = prompt("Precio:", "120");
-            let v = parseInt(p);
-            if (!isNaN(v)) {
-                // Reproducir sonido
-                cashSound.play().catch(e => console.log("Audio activo"));
-                
-                movimientos.push({ tipo: 'ingreso', monto: v, desc: 'Corte', hora: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
-                actualizar();
-                if (navigator.vibrate) navigator.vibrate(80);
-            }
+            if (p) { movimientos.push({ tipo: 'ingreso', monto: parseInt(p), desc: 'Corte', hora: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) }); actualizar(); playSound('ganar'); }
         }
 
         function agregarGasto() {
             let p = prompt("Monto:");
-            let v = parseInt(p);
-            if (!isNaN(v)) {
-                let d = prompt("¿En qué?", "Comida") || "Gasto";
-                movimientos.push({ tipo: 'gasto', monto: v, desc: d, hora: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
-                actualizar();
-            }
+            if (p) { let d = prompt("¿Qué es?", "Comida") || "Gasto"; movimientos.push({ tipo: 'gasto', monto: parseInt(p), desc: d, hora: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) }); actualizar(); playSound('perder'); }
+        }
+
+        function confirmarCierre() {
+            if (movimientos.length === 0) return;
+            const ing = movimientos.filter(m => m.tipo === 'ingreso').reduce((a, b) => a + b.monto, 0);
+            const gas = movimientos.filter(m => m.tipo === 'gasto').reduce((a, b) => a + b.monto, 0);
+            const cts = movimientos.filter(m => m.tipo === 'ingreso').length;
+            document.getElementById('ticketArea').innerHTML = `
+                <div class="ticket">
+                    <div style="font-weight:bold; color:var(--gael); margin-bottom:15px">MALANDROS BARBER REPORT</div>
+                    <div class="ticket-row"><span>Cortes Totales:</span> <b>${cts}</b></div>
+                    <div class="ticket-row"><span>Dinero Bruto:</span> <b style="color:var(--neon)">$${ing}</b></div>
+                    <div class="ticket-row"><span>Gastos:</span> <b style="color:var(--red)">-$${gas}</b></div>
+                    <div class="ticket-row ticket-total"><span>GANANCIA:</span> <span>$${ing-gas}</span></div>
+                    <div style="font-size:10px; margin-top:15px; color:#555">${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</div>
+                </div>`;
+            document.getElementById('resumenModal').style.display = 'flex';
+        }
+
+        function compartirWhatsApp() {
+            const ing = movimientos.filter(m => m.tipo === 'ingreso').reduce((a, b) => a + b.monto, 0);
+            const gas = movimientos.filter(m => m.tipo === 'gasto').reduce((a, b) => a + b.monto, 0);
+            const cts = movimientos.filter(m => m.tipo === 'ingreso').length;
+            const texto = `💈 *REPORTE MALANDROS BARBER*\n📅 Fecha: ${new Date().toLocaleDateString()}\n--------------------------\n✂️ Cortes: ${cts}\n💰 Bruto: $${ing}\n💸 Gastos: $${gas}\n✅ *NETO: $${ing-gas}*\n--------------------------`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`);
+        }
+
+        function finalizarDiaDefinitivo() {
+            const ing = movimientos.filter(m => m.tipo === 'ingreso').reduce((a, b) => a + b.monto, 0);
+            const gas = movimientos.filter(m => m.tipo === 'gasto').reduce((a, b) => a + b.monto, 0);
+            registroGlobal.push({ fecha: new Date().toLocaleDateString(), total: (ing-gas), cortes: movimientos.filter(m => m.tipo === 'ingreso').length });
+            localStorage.setItem('registro_global_malandros', JSON.stringify(registroGlobal));
+            movimientos = []; localStorage.removeItem('movimientos_hoy'); location.reload();
         }
 
         function verDetalleHoy() {
             const list = document.getElementById('dayHistoryList');
-            list.innerHTML = movimientos.map((m, i) => `
-                <div class="history-item" style="color: ${m.tipo === 'ingreso' ? 'var(--neon)' : 'var(--red)'}">
-                    <button class="trash-btn" onclick="borrarMov(${i})">🗑️</button>
-                    <div style="flex-grow:1; text-align:left; margin-left:10px">
-                        <b>${m.desc}</b><br><small>${m.hora}</small>
-                    </div>
-                    <b>${m.tipo === 'ingreso' ? '+' : '-'}$${m.monto}</b>
-                </div>`).join('') || "<p>Sin movimientos</p>";
+            list.innerHTML = movimientos.map((m, i) => `<div class="history-item" style="color:${m.tipo==='ingreso'?'var(--neon)':'var(--red)'}; border-bottom:1px solid #111; padding:15px 0; display:flex; justify-content:space-between">
+                <button onclick="borrarMov(${i})" style="background:none; border:none; font-size:20px">🗑️</button>
+                <div style="flex-grow:1; text-align:left; padding-left:15px"><b>${m.desc}</b><br><small>${m.hora}</small></div>
+                <b>$${m.monto}</b></div>`).join('') || "Sin movimientos";
             document.getElementById('historyModal').style.display = 'flex';
         }
 
         function verGlobal() {
             const list = document.getElementById('globalHistoryList');
-            list.innerHTML = registroGlobal.slice().reverse().map(r => `
-                <div class="history-item">
-                    <div style="text-align:left">
-                        <b>${r.fecha}</b><br>
-                        <small>${r.cortes} cortes</small>
-                    </div>
-                    <b style="color:var(--neon)">$${r.total} NETO</b>
-                </div>`).join('') || "<p>Vacío</p>";
-            document.getElementById('historyModal').style.display = 'none';
-            document.getElementById('globalModal').style.display = 'flex';
+            list.innerHTML = registroGlobal.slice().reverse().map(r => `<div style="display:flex; justify-content:space-between; padding:15px 0; border-bottom:1px solid #111"><div><b>${r.fecha}</b><br><small>${r.cortes} cts</small></div><b style="color:var(--neon)">$${r.total}</b></div>`).join('') || "Historial vacío";
+            document.getElementById('historyModal').style.display = 'none'; document.getElementById('globalModal').style.display = 'flex';
         }
 
-        function borrarMov(i) {
-            if (confirm("¿Borrar?")) { movimientos.splice(i, 1); actualizar(); verDetalleHoy(); }
-        }
-
-        function hardReset() {
-            if (prompt("CLAVE:") === CLAVE) { localStorage.clear(); location.reload(); }
-        }
-
-        function cerrarModales() { 
-            document.getElementById('historyModal').style.display = 'none'; 
-            document.getElementById('globalModal').style.display = 'none'; 
-        }
-
-        function finalizarDia() {
-            if (movimientos.length === 0) return;
-            if (confirm("¿Cerrar caja?")) {
-                const ingresos = movimientos.filter(m => m.tipo === 'ingreso').reduce((a, b) => a + b.monto, 0);
-                const gastos = movimientos.filter(m => m.tipo === 'gasto').reduce((a, b) => a + b.monto, 0);
-                registroGlobal.push({ fecha: new Date().toLocaleDateString(), total: (ingresos - gastos), cortes: movimientos.filter(m => m.tipo === 'ingreso').length });
-                localStorage.setItem('registro_global_malandros', JSON.stringify(registroGlobal));
-                movimientos = [];
-                localStorage.removeItem('movimientos_hoy');
-                location.reload();
-            }
-        }
+        function borrarMov(i) { if(confirm("¿Borrar?")){ movimientos.splice(i,1); actualizar(); verDetalleHoy(); playSound('perder'); } }
+        function hardReset() { if(prompt("CLAVE:")===CLAVE){ localStorage.clear(); location.reload(); } }
+        function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display='none'); }
         actualizar();
     </script>
 </body>
