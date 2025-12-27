@@ -15,31 +15,24 @@
             display: flex; flex-direction: column; justify-content: space-between; height: 100vh; box-sizing: border-box; overflow: hidden;
         }
         .header h1 { font-size: 26px; margin: 5px 0; letter-spacing: -1px; }
-
         .progress-container { background: #1a1a1a; height: 22px; border-radius: 11px; border: 1px solid #333; overflow: hidden; position: relative; margin: 10px 0; }
         .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--gael), var(--neon)); transition: 0.8s ease; }
         .progress-text { position: absolute; width: 100%; top: 4px; font-size: 10px; font-weight: 800; }
-
         .money { color: var(--neon); font-size: 75px; font-weight: 900; line-height: 1; margin: 0; }
-        
         .touch-area { 
             width: 180px; height: 180px; background: radial-gradient(circle, #222 0%, #000 100%); 
             border: 4px solid var(--neon); border-radius: 50%; margin: 20px auto;
             display: flex; align-items: center; justify-content: center; cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-            box-shadow: 0 0 20px rgba(0, 251, 255, 0.15);
+            -webkit-tap-highlight-color: transparent; box-shadow: 0 0 20px rgba(0, 251, 255, 0.15);
         }
         .touch-area:active { transform: scale(0.9); border-color: var(--gael); }
-        .touch-area span { font-size: 110px; line-height: 1; } /* LOGO GRANDE */
-
+        .touch-area span { font-size: 110px; line-height: 1; }
         .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
         .btn { border: none; border-radius: 16px; font-weight: 800; font-size: 13px; text-transform: uppercase; cursor: pointer; height: 60px; display: flex; align-items: center; justify-content: center; }
         .btn-detail { background: #1a1a1a; color: white; border: 1px solid #333; }
         .btn-gasto { background: #200; color: var(--red); border: 1px solid var(--red); }
         .btn-close { background: var(--gael); color: white; width: 100%; height: 65px; margin-bottom: 10px; }
-
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 1000; flex-direction: column; padding: 40px 25px; box-sizing: border-box; overflow-y: auto; }
-        
         .ticket { background: #111; border: 2px dashed #333; border-radius: 10px; padding: 25px; position: relative; }
         .ticket-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 18px; }
         .ticket-total { font-size: 28px; font-weight: 900; color: var(--gold); border-top: 2px solid #222; padding-top: 15px; margin-top: 10px; }
@@ -66,7 +59,7 @@
     <div>
         <div class="controls">
             <button class="btn btn-detail" onclick="verDetalleHoy()">DETALLE / BORRAR</button>
-            <button class="btn btn-gasto" onclick="agregarGasto()">GASTO</button>
+            <button class="btn btn-gasto" onclick="agregarGasto()">GASTO (-)</button>
         </div>
         <button class="btn btn-close" onclick="confirmarCierre()">CERRAR DÍA</button>
     </div>
@@ -97,15 +90,36 @@
         const CLAVE = "URBINA2025";
         let movimientos = JSON.parse(localStorage.getItem('movimientos_hoy')) || [];
         let registroGlobal = JSON.parse(localStorage.getItem('registro_global_malandros')) || [];
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // MOTOR DE AUDIO REFORZADO
+        let ctx;
+        function initAudio() {
+            if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (ctx.state === 'suspended') ctx.resume();
+        }
 
         function playSound(type) {
-            if (ctx.state === 'suspended') ctx.resume();
-            const osc = ctx.createOscillator(); const gain = ctx.createGain();
-            if (type === 'ganar') { osc.type = "sine"; osc.frequency.setValueAtTime(880, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
-            } else { osc.type = "triangle"; osc.frequency.setValueAtTime(220, ctx.currentTime); osc.frequency.linearRampToValueAtTime(60, ctx.currentTime + 0.2); }
-            gain.gain.setValueAtTime(0.1, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-            osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.3);
+            initAudio();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            if (type === 'ganar') {
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(880, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            } else {
+                osc.type = "triangle";
+                osc.frequency.setValueAtTime(220, ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(60, ctx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+            }
+
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.3);
         }
 
         function actualizar() {
@@ -122,13 +136,34 @@
         }
 
         function sumarCorte() {
+            initAudio(); // Despertar audio
             let p = prompt("Precio:", "120");
-            if (p) { movimientos.push({ tipo: 'ingreso', monto: parseInt(p), desc: 'Corte', hora: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) }); actualizar(); playSound('ganar'); }
+            if (p) { 
+                movimientos.push({ tipo: 'ingreso', monto: parseInt(p), desc: 'Corte', hora: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) }); 
+                actualizar(); 
+                playSound('ganar'); 
+                if (navigator.vibrate) navigator.vibrate(80);
+            }
         }
 
         function agregarGasto() {
+            initAudio();
             let p = prompt("Monto:");
-            if (p) { let d = prompt("¿Qué es?", "Comida") || "Gasto"; movimientos.push({ tipo: 'gasto', monto: parseInt(p), desc: d, hora: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) }); actualizar(); playSound('perder'); }
+            if (p) { 
+                let d = prompt("¿Qué es?", "Comida") || "Gasto"; 
+                movimientos.push({ tipo: 'gasto', monto: parseInt(p), desc: d, hora: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) }); 
+                actualizar(); 
+                playSound('perder'); 
+            }
+        }
+
+        function borrarMov(i) { 
+            if(confirm("¿Borrar?")){ 
+                movimientos.splice(i,1); 
+                actualizar(); 
+                verDetalleHoy(); 
+                playSound('perder'); 
+            } 
         }
 
         function confirmarCierre() {
@@ -143,7 +178,7 @@
                     <div class="ticket-row"><span>Dinero Bruto:</span> <b style="color:var(--neon)">$${ing}</b></div>
                     <div class="ticket-row"><span>Gastos:</span> <b style="color:var(--red)">-$${gas}</b></div>
                     <div class="ticket-row ticket-total"><span>GANANCIA:</span> <span>$${ing-gas}</span></div>
-                    <div style="font-size:10px; margin-top:15px; color:#555">${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</div>
+                    <div style="font-size:10px; margin-top:15px; color:#555">${new Date().toLocaleDateString()}</div>
                 </div>`;
             document.getElementById('resumenModal').style.display = 'flex';
         }
@@ -179,10 +214,13 @@
             document.getElementById('historyModal').style.display = 'none'; document.getElementById('globalModal').style.display = 'flex';
         }
 
-        function borrarMov(i) { if(confirm("¿Borrar?")){ movimientos.splice(i,1); actualizar(); verDetalleHoy(); playSound('perder'); } }
         function hardReset() { if(prompt("CLAVE:")===CLAVE){ localStorage.clear(); location.reload(); } }
         function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display='none'); }
         actualizar();
+        
+        // El primer toque en cualquier lado despierta el audio
+        document.body.addEventListener('touchstart', initAudio, { once: true });
+        document.body.addEventListener('click', initAudio, { once: true });
     </script>
 </body>
 </html>
