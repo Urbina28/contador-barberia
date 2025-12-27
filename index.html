@@ -3,160 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gael Urbina - Malandros Barber</title>
+    <title>Malandros Barber - Edit Mode</title>
     <style>
-        :root { 
-            --gold: #ffd700; 
-            --dark: #000; 
-            --neon: #00fbff; 
-            --red: #ff4444; 
-            --gael-color: #ff0055;
-        }
+        :root { --gold: #ffd700; --dark: #000; --neon: #00fbff; --gael: #ff0055; --bg: #050505; --red: #ff4444; }
+        body { background: var(--bg); color: white; font-family: 'Arial Black', sans-serif; text-align: center; margin: 0; display: flex; flex-direction: column; justify-content: center; height: 100vh; overflow: hidden; }
         
-        body {
-            background: var(--dark);
-            color: white;
-            font-family: 'Segoe UI', sans-serif;
-            text-align: center;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
-        }
+        .progress-container { width: 85%; background: #1a1a1a; height: 18px; border-radius: 50px; margin: 10px auto; border: 1px solid #333; overflow: hidden; position: relative; }
+        .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--gael), var(--neon)); box-shadow: 0 0 15px var(--neon); transition: 0.8s ease; }
+        .progress-text { position: absolute; width: 100%; top: 3px; font-size: 8px; letter-spacing: 2px; color: white; }
 
-        .gael-header { position: absolute; top: 30px; width: 100%; }
-        .gael-header h2 { font-size: 14px; letter-spacing: 5px; color: var(--gael-color); text-shadow: 0 0 10px var(--gael-color); margin: 0; text-transform: uppercase; }
-        .main-title { font-size: 2.2rem; font-weight: 900; margin-bottom: 5px; }
+        .gael-header { position: absolute; top: 15px; width: 100%; }
+        .main-title { font-size: 1.6rem; letter-spacing: -1px; }
 
-        .touch-area {
-            width: 200px; height: 200px;
-            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
-            border: 4px solid var(--neon);
-            border-radius: 50%;
-            margin: 20px auto;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 40px rgba(0, 251, 255, 0.3);
-            cursor: pointer;
-            transition: all 0.1s ease;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .touch-area:active { transform: scale(0.9); box-shadow: 0 0 80px var(--neon); }
-        .touch-area span { font-size: 70px; }
+        .touch-area { width: 140px; height: 140px; background: radial-gradient(circle, #222 0%, #000 100%); border: 4px solid var(--neon); border-radius: 50%; margin: 5px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .touch-area:active { transform: scale(0.95); box-shadow: 0 0 30px var(--neon); }
+        .touch-area span { font-size: 45px; }
 
-        .stats {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 25px; border-radius: 30px; margin: 20px;
-        }
-        .money { color: var(--neon); font-size: 3.5rem; font-weight: 900; text-shadow: 0 0 20px rgba(0, 251, 255, 0.5); }
-        .count-text { color: #888; font-size: 1.1rem; text-transform: uppercase; }
+        .money { color: var(--neon); font-size: 3.2rem; margin: 0; font-weight: 900; }
+        
+        .btn-group { display: flex; justify-content: center; gap: 8px; margin-top: 5px; padding: 0 20px; }
+        .btn { border: none; padding: 12px 14px; border-radius: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 10px; }
+        .btn-gasto { background: #300; color: var(--red); border: 1px solid var(--red); }
+        .btn-action { background: #111; color: white; border: 1px solid #333; flex: 1; }
+        .btn-close { background: var(--gael); color: white; width: 85%; margin: 15px auto; }
 
-        .controls { display: flex; justify-content: center; gap: 15px; }
-        .btn { border: none; padding: 15px 25px; border-radius: 15px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        .btn-minus { background: #222; color: var(--red); border: 1px solid var(--red); }
-        .btn-reset { background: var(--gael-color); color: white; box-shadow: 0 0 15px var(--gael-color); }
-
-        /* Pantalla de Reporte Final */
-        #overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 100;
-            flex-direction: column; align-items: center; justify-content: center;
-        }
-        .report-card { border: 2px solid var(--gold); padding: 40px; border-radius: 20px; box-shadow: 0 0 50px var(--gold); }
-        .report-card h1 { color: var(--gold); font-size: 3rem; margin: 0; }
-
-        .gael-footer { position: absolute; bottom: 30px; width: 100%; font-size: 10px; color: #444; letter-spacing: 2px; }
+        #summaryModal, #historyModal, #globalModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.97); z-index: 300; align-items: center; justify-content: center; backdrop-filter: blur(8px); flex-direction: column; }
+        .summary-card { background: #111; border: 2px solid var(--gold); width: 85%; padding: 25px; border-radius: 25px; box-shadow: 0 0 40px rgba(255,215,0,0.2); }
+        
+        .history-list { width: 90%; overflow-y: auto; margin-top: 10px; max-height: 60vh; }
+        .history-row { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #111; font-size: 12px; }
+        
+        .del-btn { background: none; border: none; color: #444; font-size: 16px; padding: 0 10px; cursor: pointer; }
+        .del-btn:hover { color: var(--red); }
     </style>
 </head>
 <body>
 
-    <div id="overlay" onclick="this.style.display='none'">
-        <div class="report-card">
-            <h2 style="color:white">RESUMEN DEL DÍA</h2>
-            <h1 id="totalCortesFinal">0</h1>
-            <p style="letter-spacing:5px">CORTES COMPLETADOS</p>
-            <div id="totalDineroFinal" style="font-size: 2.5rem; color: var(--neon); font-weight: bold;">$0</div>
-            <br>
-            <p style="color: #666; font-size: 12px;">Toca para continuar</p>
+    <div id="summaryModal">
+        <div class="summary-card">
+            <h2 style="color:var(--gold); font-size: 1.2rem;">CIERRE FINAL</h2>
+            <div style="font-size: 3.5rem;" id="sumCortes">0</div>
+            <p style="font-size: 10px;">CORTES HOY</p>
+            <div id="sumDetalle" style="text-align: left; font-size: 14px; color: #888; padding: 10px 0;"></div>
+            <div style="color:var(--neon); font-size: 2.2rem;" id="sumNeto">$0</div>
+            <p style="font-size: 10px; color: var(--neon); margin-bottom: 20px;">NETO EN CAJA</p>
+            <button class="btn" style="background:white; color:black; width:100%" onclick="location.reload()">LISTO</button>
         </div>
     </div>
 
+    <div id="historyModal">
+        <h2 style="color: var(--neon); letter-spacing: 2px;">MOVIMIENTOS DE HOY</h2>
+        <p style="font-size: 9px; color: #555;">TOCA EL BOTE PARA ELIMINAR</p>
+        <div class="history-list" id="dayHistoryList"></div>
+        <button class="btn" style="margin-top: 20px; background: var(--gold); color: black; width: 80%;" onclick="verGlobal()">HISTORIAL DE DÍAS</button>
+        <button class="btn" style="margin-top: 10px; background: #222; width: 80%; color: white;" onclick="cerrarModales()">CERRAR</button>
+    </div>
+
+    <div id="globalModal">
+        <h2 style="color: var(--gold); letter-spacing: 2px;">DÍAS PASADOS</h2>
+        <div class="history-list" id="globalHistoryList"></div>
+        <button class="btn" style="margin-top: 20px; background: #222; width: 80%; color: white;" onclick="cerrarModales()">REGRESAR</button>
+    </div>
+
     <div class="gael-header">
-        <h2>Urbina Studios</h2>
+        <div style="color: var(--gael); letter-spacing: 3px; font-size: 9px;">URBINA STUDIOS</div>
         <div class="main-title">MALANDROS BARBER</div>
     </div>
 
-    <div class="touch-area" onclick="sumarCorte()">
-        <span>💈</span>
+    <div class="progress-container">
+        <div class="progress-bar" id="barra"></div>
+        <div class="progress-text" id="textoBarra">PROGRESO</div>
     </div>
 
-    <div class="stats">
-        <div class="count-text">Cortes: <span id="contador" style="color: white;">0</span></div>
+    <div style="margin-bottom: 10px;">
         <div id="dinero" class="money">$0</div>
+        <div style="font-size: 10px; color: #555;">CORTES: <span id="contador" style="color: white;">0</span></div>
     </div>
+    
+    <div class="touch-area" onclick="sumarCorte()"><span>💈</span></div>
 
-    <div class="controls">
-        <button class="btn btn-minus" onclick="restarCorte()">Corregir</button>
-        <button class="btn btn-reset" onclick="finalizarDia()">Cerrar Caja</button>
+    <div class="btn-group">
+        <button class="btn btn-action" onclick="verDetalleHoy()">Detalle/Borrar</button>
+        <button class="btn btn-gasto" onclick="agregarGasto()">Gasto (-)</button>
     </div>
-
-    <div class="gael-footer">GAEL URBINA v2.0</div>
+    
+    <button class="btn btn-close" onclick="finalizarDia()">CERRAR CAJA</button>
 
     <script>
-        let historialDinero = JSON.parse(localStorage.getItem('historial_malandros')) || [];
-        
+        let movimientos = JSON.parse(localStorage.getItem('movimientos_hoy')) || [];
+        let registroGlobal = JSON.parse(localStorage.getItem('registro_global_malandros')) || [];
+
         function actualizar() {
-            const totalDinero = historialDinero.reduce((a, b) => a + b, 0);
-            document.getElementById('contador').innerText = historialDinero.length;
-            document.getElementById('dinero').innerText = "$" + totalDinero;
-            localStorage.setItem('historial_malandros', JSON.stringify(historialDinero));
+            const ingresos = movimientos.filter(m => m.tipo === 'ingreso').reduce((a, b) => a + b.monto, 0);
+            const gastos = movimientos.filter(m => m.tipo === 'gasto').reduce((a, b) => a + b.monto, 0);
+            const neto = ingresos - gastos;
+            const cortes = movimientos.filter(m => m.tipo === 'ingreso').length;
+            const record = registroGlobal.length === 0 ? 5 : Math.max(...registroGlobal.map(r => r.cortes), 5);
+            const porcentaje = (cortes / record) * 100;
+
+            document.getElementById('contador').innerText = cortes;
+            document.getElementById('dinero').innerText = "$" + neto;
+            document.getElementById('barra').style.width = Math.min(porcentaje, 100) + "%";
+            document.getElementById('textoBarra').innerText = cortes >= record ? "¡NUEVO RÉCORD!" : `RÉCORD: ${record}`;
+            if (cortes >= record) document.getElementById('barra').style.background = "var(--gold)";
+            localStorage.setItem('movimientos_hoy', JSON.stringify(movimientos));
         }
 
         function sumarCorte() {
-            let precio = prompt("Gibran, ingresa el costo del corte:", "120");
-            if (precio !== null && precio !== "") {
-                let valor = parseInt(precio);
-                if (!isNaN(valor)) {
-                    historialDinero.push(valor);
-                    actualizar();
-                    
-                    // Lógica de cada 3 cortes
-                    if (historialDinero.length % 3 === 0) {
-                        setTimeout(() => {
-                            alert("🔥 ¡FELICIDADES GIBRAN! 🔥\nLlevas una racha de " + historialDinero.length + " cortes.\n¡Sigue rompiéndola!");
-                        }, 200);
-                    }
-                    if (navigator.vibrate) navigator.vibrate(100);
-                }
+            let p = prompt("Precio:", "120");
+            let valor = parseInt(p);
+            if (!isNaN(valor)) {
+                movimientos.push({ id: Date.now(), tipo: 'ingreso', monto: valor, desc: 'Corte', hora: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
+                actualizar();
+                if (movimientos.filter(m => m.tipo === 'ingreso').length % 3 === 0) alert("🔥 ¡Racha de 3 cortes! 🔥");
             }
         }
 
-        function restarCorte() {
-            if (historialDinero.length === 0) return alert("No hay nada que borrar.");
-            if (confirm("¿Borrar último registro?")) {
-                historialDinero.pop();
+        function agregarGasto() {
+            let p = prompt("¿Monto del gasto?");
+            let valor = parseInt(p);
+            if (!isNaN(valor)) {
+                let desc = prompt("¿En qué?", "Comida") || "Gasto";
+                movimientos.push({ id: Date.now(), tipo: 'gasto', monto: valor, desc: desc, hora: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
                 actualizar();
             }
+        }
+
+        function verDetalleHoy() {
+            const list = document.getElementById('dayHistoryList');
+            list.innerHTML = movimientos.map((m, index) => `
+                <div class="history-row" style="color: ${m.tipo === 'ingreso' ? 'var(--neon)' : 'var(--red)'}">
+                    <button class="del-btn" onclick="borrarMovimiento(${index})">🗑️</button>
+                    <span style="font-size:10px; color:#555">${m.hora}</span>
+                    <span style="flex-grow: 1; text-align: left; margin-left: 10px;">${m.desc}</span>
+                    <b>${m.tipo === 'ingreso' ? '+' : '-'}$${m.monto}</b>
+                </div>`).join('') || "<p>Sin movimientos hoy</p>";
+            document.getElementById('historyModal').style.display = 'flex';
+        }
+
+        function borrarMovimiento(index) {
+            if (confirm("¿Seguro que quieres borrar este registro?")) {
+                movimientos.splice(index, 1);
+                actualizar();
+                verDetalleHoy(); // Refrescar lista
+            }
+        }
+
+        function verGlobal() {
+            const list = document.getElementById('globalHistoryList');
+            list.innerHTML = registroGlobal.slice().reverse().map(r => `
+                <div class="history-row">
+                    <span>${r.fecha}</span>
+                    <span><b>${r.cortes}</b> cts</span>
+                    <span style="color:var(--neon)">$${r.total}</span>
+                </div>`).join('') || "<p>Sin historial</p>";
+            document.getElementById('historyModal').style.display = 'none';
+            document.getElementById('globalModal').style.display = 'flex';
+        }
+
+        function cerrarModales() {
+            document.getElementById('historyModal').style.display = 'none';
+            document.getElementById('globalModal').style.display = 'none';
         }
 
         function finalizarDia() {
-            if (historialDinero.length === 0) return alert("Aún no tienes cortes registrados hoy.");
-            
-            if (confirm("Gibran, ¿cerrar caja y ver resumen final?")) {
-                const totalDinero = historialDinero.reduce((a, b) => a + b, 0);
-                const totalCortes = historialDinero.length;
-                
-                // Mostrar pantalla final
-                document.getElementById('totalCortesFinal').innerText = totalCortes;
-                document.getElementById('totalDineroFinal').innerText = "$" + totalDinero;
-                document.getElementById('overlay').style.display = 'flex';
-                
-                // Limpiar datos
-                historialDinero = [];
-                actualizar();
-            }
+            if (movimientos.length === 0) return;
+            const ingresos = movimientos.filter(m => m.tipo === 'ingreso').reduce((a, b) => a + b.monto, 0);
+            const gastos = movimientos.filter(m => m.tipo === 'gasto').reduce((a, b) => a + b.monto, 0);
+            const cortes = movimientos.filter(m => m.tipo === 'ingreso').length;
+            const neto = ingresos - gastos;
+
+            document.getElementById('sumCortes').innerText = cortes;
+            document.getElementById('sumDetalle').innerHTML = `Bruto: $${ingresos} | Gastos: -$${gastos}`;
+            document.getElementById('sumNeto').innerText = "$" + neto;
+            document.getElementById('summaryModal').style.display = 'flex';
+
+            registroGlobal.push({ fecha: new Date().toLocaleDateString(), total: neto, cortes: cortes });
+            localStorage.setItem('registro_global_malandros', JSON.stringify(registroGlobal));
+            localStorage.removeItem('movimientos_hoy');
         }
 
         actualizar();
