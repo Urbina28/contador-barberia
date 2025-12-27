@@ -60,7 +60,7 @@
 
     <div class="display-area">
         <div class="money" id="dinero">$0</div>
-        <div style="color: #888; font-size: 14px;">CORTES: <span id="contador" style="color:white">0</span></div>
+        <div style="color: #888; font-size: 14px;">CORTES HOY: <span id="contador" style="color:white">0</span></div>
         <div class="touch-area" onclick="sumarCorte()"><span>💈</span></div>
     </div>
 
@@ -73,21 +73,24 @@
     </div>
 
     <div id="historyModal" class="modal">
-        <h2 style="color: var(--neon)">MOVIMIENTOS DE HOY</h2>
+        <h2 style="color: var(--neon)">MOVIMIENTOS</h2>
         <div class="history-list" id="dayHistoryList"></div>
         <button class="btn" style="width:100%; background: var(--gold); color: black; margin-bottom: 10px;" onclick="verGlobal()">VER DÍAS PASADOS</button>
         <button class="btn btn-detail" style="width:100%" onclick="cerrarModales()">REGRESAR</button>
     </div>
 
     <div id="globalModal" class="modal">
-        <h2 style="color: var(--gold)">RESUMEN DE DÍAS</h2>
+        <h2 style="color: var(--gold)">HISTORIAL</h2>
         <div class="history-list" id="globalHistoryList"></div>
         <button class="btn btn-detail" style="width:100%; margin-top: 10px;" onclick="cerrarModales()">REGRESAR</button>
-        <button onclick="hardReset()" style="background:none; border:none; color:#300; margin-top:30px; font-size:10px">REINICIAR TODO EL SISTEMA</button>
+        <button onclick="hardReset()" style="background:none; border:none; color:#300; margin-top:30px; font-size:10px">REINICIAR SISTEMA</button>
     </div>
 
     <script>
         const CLAVE = "URBINA2025";
+        // Sonido de caja registradora
+        const cashSound = new Audio('https://www.myinstants.com/media/sounds/cash-register-purchase.mp3');
+        
         let movimientos = JSON.parse(localStorage.getItem('movimientos_hoy')) || [];
         let registroGlobal = JSON.parse(localStorage.getItem('registro_global_malandros')) || [];
 
@@ -102,7 +105,7 @@
             document.getElementById('dinero').innerText = "$" + neto;
             const pct = Math.min((cortes / record) * 100, 100);
             document.getElementById('barra').style.width = pct + "%";
-            document.getElementById('textoBarra').innerText = cortes >= record ? "NUEVO RÉCORD" : `RÉCORD: ${record}`;
+            document.getElementById('textoBarra').innerText = cortes >= record ? "NUEVO RÉCORD" : `META: ${record}`;
             localStorage.setItem('movimientos_hoy', JSON.stringify(movimientos));
         }
 
@@ -110,6 +113,9 @@
             let p = prompt("Precio:", "120");
             let v = parseInt(p);
             if (!isNaN(v)) {
+                // Reproducir sonido
+                cashSound.play().catch(e => console.log("Audio activo"));
+                
                 movimientos.push({ tipo: 'ingreso', monto: v, desc: 'Corte', hora: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
                 actualizar();
                 if (navigator.vibrate) navigator.vibrate(80);
@@ -135,7 +141,7 @@
                         <b>${m.desc}</b><br><small>${m.hora}</small>
                     </div>
                     <b>${m.tipo === 'ingreso' ? '+' : '-'}$${m.monto}</b>
-                </div>`).join('') || "<p>Sin movimientos hoy</p>";
+                </div>`).join('') || "<p>Sin movimientos</p>";
             document.getElementById('historyModal').style.display = 'flex';
         }
 
@@ -148,7 +154,7 @@
                         <small>${r.cortes} cortes</small>
                     </div>
                     <b style="color:var(--neon)">$${r.total} NETO</b>
-                </div>`).join('') || "<p>No hay días guardados</p>";
+                </div>`).join('') || "<p>Vacío</p>";
             document.getElementById('historyModal').style.display = 'none';
             document.getElementById('globalModal').style.display = 'flex';
         }
@@ -158,11 +164,7 @@
         }
 
         function hardReset() {
-            if (prompt("CLAVE MAESTRA:") === CLAVE) {
-                localStorage.clear();
-                alert("Todo borrado.");
-                location.reload();
-            }
+            if (prompt("CLAVE:") === CLAVE) { localStorage.clear(); location.reload(); }
         }
 
         function cerrarModales() { 
@@ -172,14 +174,10 @@
 
         function finalizarDia() {
             if (movimientos.length === 0) return;
-            if (confirm("¿Cerrar el día de hoy?")) {
+            if (confirm("¿Cerrar caja?")) {
                 const ingresos = movimientos.filter(m => m.tipo === 'ingreso').reduce((a, b) => a + b.monto, 0);
                 const gastos = movimientos.filter(m => m.tipo === 'gasto').reduce((a, b) => a + b.monto, 0);
-                registroGlobal.push({ 
-                    fecha: new Date().toLocaleDateString(), 
-                    total: (ingresos - gastos), 
-                    cortes: movimientos.filter(m => m.tipo === 'ingreso').length 
-                });
+                registroGlobal.push({ fecha: new Date().toLocaleDateString(), total: (ingresos - gastos), cortes: movimientos.filter(m => m.tipo === 'ingreso').length });
                 localStorage.setItem('registro_global_malandros', JSON.stringify(registroGlobal));
                 movimientos = [];
                 localStorage.removeItem('movimientos_hoy');
