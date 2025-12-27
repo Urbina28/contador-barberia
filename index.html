@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gael Urbina - Malandros Barber</title>
+    <style>
+        :root { 
+            --gold: #ffd700; 
+            --dark: #000; 
+            --neon: #00fbff; 
+            --red: #ff4444; 
+            --gael-color: #ff0055;
+        }
+        
+        body {
+            background: var(--dark);
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            text-align: center;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .gael-header { position: absolute; top: 30px; width: 100%; }
+        .gael-header h2 { font-size: 14px; letter-spacing: 5px; color: var(--gael-color); text-shadow: 0 0 10px var(--gael-color); margin: 0; text-transform: uppercase; }
+        .main-title { font-size: 2.2rem; font-weight: 900; margin-bottom: 5px; }
+
+        .touch-area {
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
+            border: 4px solid var(--neon);
+            border-radius: 50%;
+            margin: 20px auto;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 40px rgba(0, 251, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.1s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .touch-area:active { transform: scale(0.9); box-shadow: 0 0 80px var(--neon); }
+        .touch-area span { font-size: 70px; }
+
+        .stats {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px; border-radius: 30px; margin: 20px;
+        }
+        .money { color: var(--neon); font-size: 3.5rem; font-weight: 900; text-shadow: 0 0 20px rgba(0, 251, 255, 0.5); }
+        .count-text { color: #888; font-size: 1.1rem; text-transform: uppercase; }
+
+        .controls { display: flex; justify-content: center; gap: 15px; }
+        .btn { border: none; padding: 15px 25px; border-radius: 15px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .btn-minus { background: #222; color: var(--red); border: 1px solid var(--red); }
+        .btn-reset { background: var(--gael-color); color: white; box-shadow: 0 0 15px var(--gael-color); }
+
+        /* Pantalla de Reporte Final */
+        #overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 100;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+        .report-card { border: 2px solid var(--gold); padding: 40px; border-radius: 20px; box-shadow: 0 0 50px var(--gold); }
+        .report-card h1 { color: var(--gold); font-size: 3rem; margin: 0; }
+
+        .gael-footer { position: absolute; bottom: 30px; width: 100%; font-size: 10px; color: #444; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+
+    <div id="overlay" onclick="this.style.display='none'">
+        <div class="report-card">
+            <h2 style="color:white">RESUMEN DEL DÍA</h2>
+            <h1 id="totalCortesFinal">0</h1>
+            <p style="letter-spacing:5px">CORTES COMPLETADOS</p>
+            <div id="totalDineroFinal" style="font-size: 2.5rem; color: var(--neon); font-weight: bold;">$0</div>
+            <br>
+            <p style="color: #666; font-size: 12px;">Toca para continuar</p>
+        </div>
+    </div>
+
+    <div class="gael-header">
+        <h2>Urbina Studios</h2>
+        <div class="main-title">MALANDROS BARBER</div>
+    </div>
+
+    <div class="touch-area" onclick="sumarCorte()">
+        <span>💈</span>
+    </div>
+
+    <div class="stats">
+        <div class="count-text">Cortes: <span id="contador" style="color: white;">0</span></div>
+        <div id="dinero" class="money">$0</div>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-minus" onclick="restarCorte()">Corregir</button>
+        <button class="btn btn-reset" onclick="finalizarDia()">Cerrar Caja</button>
+    </div>
+
+    <div class="gael-footer">GAEL URBINA v2.0</div>
+
+    <script>
+        let historialDinero = JSON.parse(localStorage.getItem('historial_malandros')) || [];
+        
+        function actualizar() {
+            const totalDinero = historialDinero.reduce((a, b) => a + b, 0);
+            document.getElementById('contador').innerText = historialDinero.length;
+            document.getElementById('dinero').innerText = "$" + totalDinero;
+            localStorage.setItem('historial_malandros', JSON.stringify(historialDinero));
+        }
+
+        function sumarCorte() {
+            let precio = prompt("Gibran, ingresa el costo del corte:", "120");
+            if (precio !== null && precio !== "") {
+                let valor = parseInt(precio);
+                if (!isNaN(valor)) {
+                    historialDinero.push(valor);
+                    actualizar();
+                    
+                    // Lógica de cada 3 cortes
+                    if (historialDinero.length % 3 === 0) {
+                        setTimeout(() => {
+                            alert("🔥 ¡FELICIDADES GIBRAN! 🔥\nLlevas una racha de " + historialDinero.length + " cortes.\n¡Sigue rompiéndola!");
+                        }, 200);
+                    }
+                    if (navigator.vibrate) navigator.vibrate(100);
+                }
+            }
+        }
+
+        function restarCorte() {
+            if (historialDinero.length === 0) return alert("No hay nada que borrar.");
+            if (confirm("¿Borrar último registro?")) {
+                historialDinero.pop();
+                actualizar();
+            }
+        }
+
+        function finalizarDia() {
+            if (historialDinero.length === 0) return alert("Aún no tienes cortes registrados hoy.");
+            
+            if (confirm("Gibran, ¿cerrar caja y ver resumen final?")) {
+                const totalDinero = historialDinero.reduce((a, b) => a + b, 0);
+                const totalCortes = historialDinero.length;
+                
+                // Mostrar pantalla final
+                document.getElementById('totalCortesFinal').innerText = totalCortes;
+                document.getElementById('totalDineroFinal').innerText = "$" + totalDinero;
+                document.getElementById('overlay').style.display = 'flex';
+                
+                // Limpiar datos
+                historialDinero = [];
+                actualizar();
+            }
+        }
+
+        actualizar();
+    </script>
+</body>
+</html>
